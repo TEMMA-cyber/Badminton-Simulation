@@ -1,0 +1,126 @@
+clc
+clear all
+[data,column]=xlsread('G:\学会発表用結果【最終】.xlsx','Sheet1');
+Model1_noOpt=data(1:4,7:9);
+Model1_Opt1=data(1:4,2:6);
+Model1_Opt2=data(8:11,3:8);
+Model2_noOpt=data(15:18,9:11);
+Model2_Opt1=data(15:18,2:8);
+Model2_Opt2=data(22:25,3:10);
+
+A=[Model1_noOpt(1,2),Model1_Opt1(1,4);
+    Model1_noOpt(2,2),Model1_Opt1(2,4);
+    Model1_noOpt(3,2),Model1_Opt1(3,4);
+    Model1_noOpt(4,2),Model1_Opt1(4,4)];
+errorA_high=[Model1_noOpt(1,3),Model1_Opt1(1,5);
+    Model1_noOpt(2,3),Model1_Opt1(2,5);
+    Model1_noOpt(3,3),Model1_Opt1(3,5);
+    Model1_noOpt(4,3),Model1_Opt1(4,5)];
+errorA_low=[-Model1_noOpt(1,3),-Model1_Opt1(1,5);
+    -Model1_noOpt(2,3),-Model1_Opt1(2,5);
+    -Model1_noOpt(3,3),-Model1_Opt1(3,5);
+    -Model1_noOpt(4,3),-Model1_Opt1(4,5)];
+figure1 = figure;
+% axes を作成
+axes1 = axes('Parent',figure1);
+hold(axes1,'on');
+bar(A)                 % create the bar chart
+hold on
+X=[0.85 1.15;1.85 2.15; 2.85 3.15;3.85 4.15];
+ errorbar(X,A, errorA_low, errorA_high,'LineStyle','none','Color',[0 0 0]);
+% xlabel を作成
+xlabel('試技番号');
+% ylabel を作成
+ylabel('誤差平均[m]');
+% 残りの座標軸プロパティの設定
+set(axes1,'FontSize',20,'XTick',[1 2 3 4]);
+hold off
+
+B=[Model2_noOpt(1,2),Model2_Opt1(1,6);
+    Model2_noOpt(2,2),Model2_Opt1(2,6);
+    Model2_noOpt(3,2),Model2_Opt1(3,6);
+    Model2_noOpt(4,2),Model2_Opt1(4,6)];
+errorB_high=[Model2_noOpt(1,3),Model2_Opt1(1,7);
+    Model2_noOpt(2,3),Model2_Opt1(2,7);
+    Model2_noOpt(3,3),Model2_Opt1(3,7);
+    Model2_noOpt(4,3),Model2_Opt1(4,7)];
+errorB_low=[-Model2_noOpt(1,3),-Model2_Opt1(1,7);
+    -Model2_noOpt(2,3),-Model2_Opt1(2,7);
+    -Model2_noOpt(3,3),-Model2_Opt1(3,7);
+    -Model2_noOpt(4,3),-Model2_Opt1(4,7)];
+figure2 = figure;
+% axes を作成
+axes2 = axes('Parent',figure2);
+hold(axes2,'on');
+bar(B)                 % create the bar chart
+hold on
+X=[0.85 1.15;1.85 2.15; 2.85 3.15;3.85 4.15];
+ errorbar(X,B, errorB_low, errorB_high,'LineStyle','none','Color',[0 0 0]);
+% xlabel を作成
+xlabel('試技番号');
+% ylabel を作成
+ylabel('誤差平均[m]');
+% 残りの座標軸プロパティの設定
+set(axes2,'FontSize',20,'XTick',[1 2 3 4]);
+hold off
+
+
+C=[Model1_Opt1(1,4),Model2_Opt1(1,6);
+    Model1_Opt1(2,4),Model2_Opt1(2,6);
+    Model1_Opt1(3,4),Model2_Opt1(3,6);
+    Model1_Opt1(4,4),Model2_Opt1(4,6)];
+errorC_high=[Model1_Opt1(1,5),Model2_Opt1(1,7);
+    Model1_Opt1(2,5),Model2_Opt1(2,7);
+    Model1_Opt1(3,5),Model2_Opt1(3,7);
+    Model1_Opt1(4,5),Model2_Opt1(4,7)];
+errorC_low=[-Model1_Opt1(1,5),-Model2_Opt1(1,7);
+    -Model1_Opt1(2,5),-Model2_Opt1(2,7);
+    -Model1_Opt1(3,5),-Model2_Opt1(3,7);
+    -Model1_Opt1(4,5),-Model2_Opt1(4,7)];
+
+figure3 = figure;
+% axes を作成
+axes3 = axes('Parent',figure3);
+hold(axes3,'on');
+bar(C)                 % create the bar chart
+hold on
+X=[0.85 1.15;1.85 2.15; 2.85 3.15;3.85 4.15];
+ errorbar(X,C, errorC_low, errorC_high,'LineStyle','none','Color',[0 0 0]);
+% xlabel を作成
+xlabel('試技番号');
+% ylabel を作成
+ylabel('誤差平均[m]');
+% 残りの座標軸プロパティの設定
+set(axes3,'FontSize',20,'XTick',[1 2 3 4]);
+hold off
+
+
+
+D=[Model1_Opt2(1,5),Model2_Opt2(1,7);
+    Model1_Opt2(2,5),Model2_Opt2(2,7);
+    Model1_Opt2(3,5),Model2_Opt2(3,7);
+    Model1_Opt2(4,5),Model2_Opt2(4,7)];
+errorD_high=[Model1_Opt2(1,6),Model2_Opt2(1,8);
+    Model1_Opt2(2,6),Model2_Opt2(2,8);
+    Model1_Opt2(3,6),Model2_Opt2(3,8);
+    Model1_Opt2(4,6),Model2_Opt2(4,8)];
+errorD_low=[-Model1_Opt2(1,6),-Model2_Opt2(1,8);
+    -Model1_Opt2(2,6),-Model2_Opt2(2,8);
+    -Model1_Opt2(3,6),-Model2_Opt2(3,8);
+    -Model1_Opt2(4,6),-Model2_Opt2(4,8)];
+
+figure4 = figure;
+% axes を作成
+axes4 = axes('Parent',figure4);
+hold(axes4,'on');
+bar(D)                 % create the bar chart
+hold on
+X=[0.85 1.15;1.85 2.15; 2.85 3.15;3.85 4.15];
+ errorbar(X,D, errorD_low, errorD_high,'LineStyle','none','Color',[0 0 0]);
+% xlabel を作成
+xlabel('試技番号');
+% ylabel を作成
+ylabel('誤差平均[m]');
+% 残りの座標軸プロパティの設定
+set(axes4,'FontSize',20,'XTick',[1 2 3 4]);
+hold off

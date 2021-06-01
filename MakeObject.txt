@@ -1,0 +1,32 @@
+
+clear; close all;
+
+% Block specification
+r = [0,0,0];          % Reference position
+A = [0, 0, 0]; % Reference orientation (x-y-z Euler angle)
+
+R = Euler2R(A);
+
+% Vertices
+VertexData = VertexShuttle(r,R);
+
+% Patches
+[PatchData_X,PatchData_Y,PatchData_Z] = PatchShuttle(VertexData);
+
+% Draw patches
+figure(1);axis equal
+h = patch(PatchData_X,PatchData_Y,PatchData_Z,'y');
+set(h,'FaceLighting','phong','EdgeLighting','phong','EdgeAlpha','0');
+
+% Axes settings
+xlabel('x','FontSize',14);
+ylabel('y','FontSize',14);
+zlabel('z','FontSize',14);
+set(gca,'FontSize',14);
+axis vis3d equal;
+view([-37.5,30]);
+camlight;
+grid on;
+xlim([-1.3,1.3]);
+ylim([-1.3,1.3]);
+zlim([-1.3,1.3]);

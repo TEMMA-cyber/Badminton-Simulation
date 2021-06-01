@@ -1,0 +1,31 @@
+function S=ConeArea5(X)
+load('para','para')
+   i=0;
+    i=i+1;
+    t=-pi/2;
+    th1=-inf;
+    th2=0;
+    triangle=0;
+    h=0.085;
+    a=0.0325;
+    b=a*abs(cos(X));
+    top=[0 h*sin(X)];
+while th1<=th2
+    t=t+1*pi/180;
+    t2=t+1*pi/180;
+    p1=[a*cos(t) b*sin(t)];
+    p2=[a*cos(t2) b*sin(t2)];
+    p3=[a*cos(-pi/2) b*sin(-pi/2)];
+    Dmin1=sqrt((top(1,1)-p1(1,1))^2+(top(1,2)-p1(1,2))^2);
+    Dmin2=sqrt((p2(1,1)-p1(1,1))^2+(p2(1,2)-p1(1,2))^2);
+    A=p1-top;B=p2-top;C=p3-top;D=A-B;
+    th1=acos(dot(A,C)/(norm(A)*norm(C)));
+    th2=acos(dot(C,B)/(norm(C)*norm(B)));
+    th3=acos(dot(-A,D)/(norm(A)*norm(D)));
+    H=Dmin1*sin(th3);
+     triangle=triangle+1/2*H*Dmin2;
+end
+S=triangle*2;
+clear X top triangle A B C th1 th2 
+end
+

@@ -1,0 +1,273 @@
+function [error1]=simopt14(para)
+
+%シミュレーションの初期値を得るためにp4とp5の初期位置、初期速度、初期角速度を算出する
+%初期位置読み込み
+
+load('position35')
+%速度計算
+g=[0;0;-9.81];
+[m,n]=size(p4);
+dt=1/240;
+p4velocity=zeros(m-2,n);%コルク
+p5velocity=zeros(m-2,n);%スカート部後端中心
+p6velocity=zeros(m-2,n);%仮想重心
+for i=1:m-2
+    p4velocity(i,:)=(p4(i+2,:)-p4(i,:))./(t(i+2)-t(i));
+    p5velocity(i,:)=(p5(i+2,:)-p5(i,:))./(t(i+2)-t(i));
+    p6velocity(i,:)=(p6(i+2,:)-p6(i,:))./(t(i+2)-t(i));
+    p7velocity(i,:)=(p7(i+2,:)-p7(i,:))./(t(i+2)-t(i));
+end
+for i=1:m-2
+    mass=0.0051;
+    mv(i,:)=mass*p6velocity(i,:);
+end
+%加速度の算出
+p4acceleration=zeros(m-4,n);%コルク
+p5acceleration=zeros(m-4,n);%スカート部後端中心
+p6acceleration=zeros(m-4,n);%仮想重心
+for i=1:m-4
+    p4acceleration(i,:)=(p4velocity(i+2,:)-p4velocity(i,:))./(t(i+2)-t(i));
+    p5acceleration(i,:)=(p5velocity(i+2,:)-p5velocity(i,:))./(t(i+2)-t(i));
+    p6acceleration(i,:)=(p6velocity(i+2,:)-p6velocity(i,:))./(t(i+2)-t(i));
+end
+%角速度計算・・・移動座標系について算出された値
+ii=2;
+A=p4-p5;
+B=p1-p5;
+C=[A(ii,1);A(ii,2);A(ii,3)];
+D=[B(ii,1);B(ii,2);B(ii,3)];
+C2=[A(ii+2,1);A(ii+2,2);A(ii+2,3)];
+D2=[B(ii+2,1);B(ii+2,2);B(ii+2,3)];
+C3=[A(ii+1,1);A(ii+1,2);A(ii+1,3)];
+D3=[B(ii+1,1);B(ii+1,2);B(ii+1,3)];
+I=C./norm(C);%iベクトル
+I2=C2./norm(C2);%iベクトル+2
+I3=C3./norm(C3);%iベクトル+1t
+
+J1=cross(C,D);
+J=J1./norm(J1);%jベクトル
+J3=cross(C2,D2);
+J2=J3./norm(J3);%jベクトル+2t
+J4=cross(C3,D3);
+J5=J4./norm(J4);%jベクトル+1t
+
+K1=cross(I,J);
+K=K1./norm(K1);%kベクトル
+K3=cross(I2,J2);
+K2=K3./norm(K3);%kベクトル+2t
+K4=cross(I3,J5);
+K5=K4./norm(K4);%kベクトル+1t
+
+LCST2=[I J K];
+LCSTT2=[I2 J2 K2];
+LCST=[I3 J5 K5];
+LOCAL2=LCST2.'*LCSTT2;
+chi=acos((LOCAL2(1,1)+LOCAL2(2,2)+LOCAL2(3,3)-1)/2);
+uw=[(LOCAL2(3,2)-LOCAL2(2,3));(LOCAL2(1,3)-LOCAL2(3,1));(LOCAL2(2,1)-LOCAL2(1,2))].'*(1/(2*sin(chi)));
+w=uw.*chi/(2*dt);
+angularV=(LCST.'*LCSTT2*w.').';%各フレームごとの角速度を第3回転後から算出したものに変換/LOCAL
+clear A B C D C2 D2 i I I2  J J1 J2 J3  K K1 K2 K3  LCST2 LCSTT2 LOCAL2 LOCALL L M N F F2 CHECK n;
+clear AA BB CC DD EE FF GG HH F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16  C3 D3 I3 J4 J5 uw chi
+%%
+%時間の規格化(実打)
+t=1/240;
+[m2,~]=size(p6(ii+1:ii+91,:));
+date2=p6(ii+1:ii+91,:).';
+MaxT=t*(m2);
+Time=0:t:MaxT-t;
+inter=MaxT/100;
+STime=0:inter:MaxT;
+date3=spline(Time,date2,STime);
+date4=date3.';
+
+%初期値が得られたので運動方程式を各軸ごとに立ててシミュレーション
+%%
+%それぞれの初期条件
+Ma=0.003;%コルク
+Mb=0.002;%スカート部
+M=Ma+Mb;
+R=0.0325;%スカート部半径
+r=0.0125;
+h=0.0725;%スカート部高さ
+%微小な時間間隔Δt
+dt=1/1000;
+%慣性モーメントテンソル(円錐＋質点）
+load ConeModel I s;
+%重心からコルクまでの距離/LOCAL
+rm=[Mb/M*s 0 0];
+%重心から風圧中心までの距離/LOCAL
+RM=[-Ma/M*s 0 0];
+w=angularV(1,:);%初期角速度(rad/s）/LOCAL
+x=p6(ii+1,:);%初期位置(m)/GROBAL
+v=p6velocity(ii,:);%初期速度(m/s)/Grobal
+v5=(LCST.'*p7velocity(ii,:).').';%風圧中心の移動速度/LOCAL
+v4=(LCST.'*p4velocity(ii,:).').';%風圧中心の移動速度/LOCAL
+clear ii Chi uw G
+Chi=acos((LCST(1,1)+LCST(2,2)+LCST(3,3)-1)/2);
+uw=[(LCST(3,2)-LCST(2,3));(LCST(1,3)-LCST(3,1));(LCST(2,1)-LCST(1,2))].'*(1/(2*sin(Chi)));
+G=EulerParameterR(Chi,uw(1,1),uw(1,2),uw(1,3));
+at=round(LCST,4);
+G1=round(G,4);
+AA=eq(at,G1);
+if AA==ones(3)
+    at=G;
+    Check(1,:)=1;
+else
+   G=EulerParameterR(-Chi,uw(1,1),uw(1,2),uw(1,3));
+   K2=round(G,4);
+   BB=eq(at,K2);
+   if BB==ones(3)
+       at=K2;
+       Chi=-Chi;
+       Check(1,:)=2;
+   else
+       Check(1,:)=10;
+   end
+end
+%%
+for  j=2:376
+%回転の運動方程式を立てる
+LOCAL=EulerParameterR(Chi(j-1,:),uw(j-1,1),uw(j-1,2),uw(j-1,3));%剛体の方位（シャトルがグローバル座標系に対してどこを向いているか）/GLOBAL
+R2(1:3,1:3,j-1)=LOCAL;
+rod(j-1,:)=[LOCAL(1,1) LOCAL(2,1) LOCAL(3,1)];
+%歪み行列の計算(機体座標系から算出）/LOCAL（rad)
+DistortionM=[0 -w(j-1,3) w(j-1,2);
+             w(j-1,3) 0 -w(j-1,1);
+            -w(j-1,2) w(j-1,1) 0];
+direction(j,:)=acos(dot(v(j-1,:),rod(j-1,:))/(norm(v(j-1,:))*norm(rod(j-1,:))));
+S=NumericalArea2(direction(j,:));
+if direction(j,:)<=pi/2
+    S2=NumericalArea2(direction(j,:)+pi/2);
+else S2=NumericalArea2(direction(j,:)-pi/2);
+end
+cd=Cd6(rad2deg(direction(j,:)));
+cl=Cl6(rad2deg(direction(j,:)));
+%角運動量算出
+angularMomentumS(j-1,:)=(I*w(j-1,:).').';
+ROD(j-1,:)=(LOCAL.'*rod(j-1,:).').';  
+Z(j-1,:)=(cross((v5(j-1,:)),ROD(j-1,:)))./norm(cross(v5(j-1,:),ROD(j-1,:))).';
+Z2(j-1,:)=(cross((v4(j-1,:)),ROD(j-1,:)))./norm(cross(v4(j-1,:),ROD(j-1,:))).';
+Drag1=-(1/2*1.157*para(1)*cd*S*norm(v5(j-1,:))^2).*(v5(j-1,:)./norm(v5(j-1,:)));%抗力の大きさと移動座標系から算出した向き/LOCAL(N)
+Lift1=(1/2*1.157*para(2)*cl*S2*norm(v5(j-1,:))^2).*(cross(Z(j-1,:),v5(j-1,:))./norm(cross(Z(j-1,:),v5(j-1,:))));%揚力の大きさと移動座標系から算出した向き/LOCAL(N)
+%ΣM=Iα+ω×H0（x、y、z）について。。。　α=I.'*(ΣM-ω×H)によりdt秒間の平均の角加速度を算出/LOCAL(rad/s^2)
+Torque(j-1,:)=(cross(rm,(LOCAL.'*(Ma*g)).')+cross(RM,(LOCAL.'*(Mb*g)).')+cross(RM,Drag1)+cross(RM,Lift1)+(-DistortionM*I*w(j-1,:).').').';
+anglarA(j-1,:)=I\Torque(j-1,:).';
+%dt秒後のω/LOCAL(rad/s)
+w(j,:)=w(j-1,:)+anglarA(j-1,:).*dt;
+%オイラーパラメータで角変位を計算
+%ωの単位ベクトルUアクシスを算出/LOCAL
+u(j,:)=w(j,:)./norm(w(j,:));
+%U軸回りに回転させたときの回転角Χ（chi）を算出(rad)
+chi=norm(w(j,:))*dt;
+%t1から見たt2の移動座標系の回転行列を算出
+At=EulerParameterR(chi,u(j,1),u(j,2),u(j,3));
+%検算
+% TH=acos(1/2*(At(1,1)+At(2,2)+At(3,3)-1));%Atから求めた回転角Χ(rad)
+% U=1/(2*sin(TH)).*[At(3,2)-At(2,3);
+%     At(1,3)-At(3,1);
+%     At(2,1)-At(1,2)];%Atから求めた回転軸U
+% G=EulerParameterR(TH,U(1,1),U(2,1),U(3,1));
+% at=round(At,4);
+% G1=round(G,4);
+% AA=eq(at,G1);
+% if AA==ones(3)
+%     at=G;
+%     Check(j,:)=1;
+% else
+%    G=EulerParameterR(-TH,U(1,1),U(2,1),U(3,1));
+%    K2=round(G,4);
+%    BB=eq(at,K2);
+%    if BB==ones(3)
+%        at=K2;
+%        TH=-TH;
+%        Check(j,:)=2;
+%    else
+%        Check(j,:)=10;
+%    end
+% end
+% clear AA BB G1 G2 TH  K2
+
+     %%
+
+At2=LOCAL*At;
+
+%At2/XYZについて算出した回転行列がXyzの順番ででどれくらい回転しているかを算出する(degree)
+Chi(j,:)=acos((At2(1,1)+At2(2,2)+At2(3,3)-1)/2);
+uw(j,:)=[(At2(3,2)-At2(2,3));(At2(1,3)-At2(3,1));(At2(2,1)-At2(1,2))].'*(1/(2*sin(Chi(j,:))));
+uw(j,:)=uw(j,:)./norm(uw(j,:));
+w(j,:)=(At2.'*LOCAL*w(j,:).').';
+
+
+%運動方程式
+%1/0.005*(Drag+Lift)+AN.'+
+M=Ma+Mb;
+ a(j-1,:)=1/M*(LOCAL*Drag1.'+LOCAL*Lift1.').'+g.';%グローバル座標について算出した加速度
+Force(j-1,:)=M*a(j-1,:);
+   k1=dt*v(j-1,:);l1=dt*a(j-1,:);k2=dt*(v(j-1,:)+l1/2);l2=l1;k3=dt*(v(j-1,:)+l2/2);l3=l2;k4=dt*(v(j-1,:)+l3);l4=l3;
+    v(j,:)=v(j-1,:)+1/6*(l1+2*l2+2*l3+l4);%GLOBAL座標について算出した速度
+     x(j,:)=x(j-1,:)+1/6*(k1+2*k2+2*k3+k4);%GLOBAL座標について表した位置
+     v5(j,:)=(At2.'*(v(j,:)).').'+cross(w(j,:),RM);%LOCAL座標について表した風圧中心の速度
+     v4(j,:)=(At2.'*(v(j,:)).').'+cross(w(j,:),rm);%LOCAL座標について表した風圧中心の速度
+     mvS(j-1,:)=(Ma+Mb)*v(j-1,:);
+clear F F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14  F15 F16 AA BB CC DD EE FF GG HH  M L N M2 L2 N2 LOCAL AN U G at at2 At2 At2M　cd cl
+clear Drag1 Drag2 Lift1 Lift2 k1 k2 k3 k4 l1 l2 l3 l4
+end
+for j=1:373
+Momentum(j,:)=(angularMomentumS(j+1,:)-angularMomentumS(j,:))./dt;
+end
+%%
+%スプライン【正規化】→最小二乗法
+%時間の規格化(simulation)
+n=90;
+time=1/240*n*1000+1;
+t=1/1000;
+x(time:end,:)=[];
+[m,~]=size(x);
+x2=x.';
+MaxT=t*m;
+Time=0:t:MaxT-t;
+inter=MaxT/100;
+STime=0:inter:MaxT;
+x3=spline(Time,x2,STime);
+x4=x3.';
+
+delta=sqrt((x4(:,1)-date4(:,1)).^2+(x4(:,2)-date4(:,2)).^2+(x4(:,3)-date4(:,3)).^2);
+deltaM=mean(delta);
+deltaS=std(delta);
+sum1=0;
+  for k=1:101
+    sum1=sum1+delta(k,1);
+  end
+error1=sum1;
+clear  x2 x3 sum1
+clear b optimization k1 k2 k3 k4 K4 K5　l1 l2 l3 l4
+clear rm RM t count1 count2 At At2M  cd cl EulerRad jj k i I inter Lift DistortionM dt g Drag m rod ROD S STime u v v5 Z j MaxT chi angularV
+%%
+
+%角変位の誤差も算出
+
+t=1/1000;
+
+K2=w;
+K2(time:end,:)=[];
+[m,~]=size(K2);
+K3=K2.';
+MaxT=t*m;
+Time=0:t:MaxT-t;
+inter=MaxT/100;
+STime=0:inter:MaxT;
+K4=spline(Time,K3,STime);
+K5=K4.';
+clear G2 G3 m MaxT inter　STime K2 K3 K4 
+load('spin(t)35.mat')
+delta2=sqrt((K5(:,1)-G4(:,1)).^2+(K5(:,2)-G4(:,2)).^2+(K5(:,3)-G4(:,3)).^2);
+delta2M=mean(delta);
+delta2S=std(delta);
+sum2=0;
+  for k=1:101
+    sum2=sum2+delta2(k,1);
+  end
+error2=sum2;
+clear sum2 k check Check CHECK date2 date3 l1 
+save('animation_model2_35','x','R2','Time')
+end

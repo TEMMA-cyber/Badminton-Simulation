@@ -1,0 +1,42 @@
+writerObj=VideoWriter('model2.avi');
+open(writerObj);
+r2=x;t2=Time;
+n_time2 = length(t2);
+
+% Compute propagation of vertices and patches
+for i_time2=1:n_time2
+    VertexData(:,:,i_time2) = VertexShuttle(r2(i_time2,:),R2(:,:,i_time2));
+    [X2,Y2,Z2] = PatchShuttle(VertexData(:,:,i_time2));
+    PatchData_X2(:,:,i_time2) = X2;
+    PatchData_Y2(:,:,i_time2) = Y2;
+    PatchData_Z2(:,:,i_time2) = Z2;
+end
+
+% Draw initial figure
+figure(1);
+h2 = patch(PatchData_X2(:,:,1),PatchData_Y2(:,:,1),PatchData_Z2(:,:,1),'y');
+set(h2,'FaceLighting','phong','EdgeLighting','phong','EdgeAlpha','0');
+
+% Axes settings
+xlabel('x','FontSize',14);
+ylabel('y','FontSize',14);
+zlabel('z','FontSize',14);
+set(gca,'FontSize',14);
+axis vis3d equal;
+view([-37.5,30]);
+camlight;
+grid on;
+xlim([-1,1]);
+ylim([-1,1]);
+zlim([-1,1.5]);
+
+% Animation Loop
+for i_time2=1:n_time2
+    
+    set(h2,'XData',PatchData_X2(:,:,i_time2));
+    set(h2,'YData',PatchData_Y2(:,:,i_time2));
+    set(h2,'ZData',PatchData_Z2(:,:,i_time2));
+    drawnow;
+    frame=getframe(gcf);
+    writeVideo(writerObj,frame)
+end
